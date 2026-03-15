@@ -12,6 +12,8 @@
 body{background:#0D0D0F;color:#fff;font-family:-apple-system,'SF Pro Display','Segoe UI',sans-serif;overscroll-behavior:none;-webkit-font-smoothing:antialiased}
 input,textarea{font-family:inherit}
 button{font-family:inherit;cursor:pointer;border:none;outline:none;-webkit-appearance:none;color:#fff}
+input[type=number]::-webkit-inner-spin-button,input[type=number]::-webkit-outer-spin-button{-webkit-appearance:none;margin:0}
+input[type=number]{-moz-appearance:textfield}
 ::-webkit-scrollbar{display:none}
 .toast{position:fixed;top:20px;left:50%;transform:translateX(-50%);background:#10B981;color:#fff;padding:10px 24px;border-radius:12px;font-weight:700;font-size:13px;z-index:999;animation:fo 2.5s forwards}
 @keyframes fo{0%,70%{opacity:1}100%{opacity:0}}
@@ -165,11 +167,19 @@ function RestTimer({seconds,onDone,color}){const[left,setLeft]=useState(seconds)
   <div style={{fontVariantNumeric:"tabular-nums",fontSize:28,fontWeight:900,color:"#fff",minWidth:60,textAlign:"center"}}>{d?"GO!":Math.floor(left/60)+":"+String(left%60).padStart(2,"0")}</div>
   <button onClick={()=>setLeft(0)} style={{background:"#ffffff20",borderRadius:8,padding:"6px 14px",color:"#fff",fontWeight:700,fontSize:13}}>Pular</button></div>)}
 
-function Stepper({value,onChange,step,label,color}){return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
+function Stepper({value,onChange,step,label,color}){
+  const[editing,setEditing]=useState(false);const ref=useRef(null);
+  useEffect(()=>{if(editing&&ref.current){ref.current.focus();ref.current.select()}},[editing]);
+  const commit=(v)=>{const n=parseFloat(v);if(!isNaN(n)&&n>=0)onChange(n);setEditing(false)};
+  return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",gap:4}}>
   <div style={{fontSize:10,fontWeight:700,color:"#888",textTransform:"uppercase",letterSpacing:.5}}>{label}</div>
   <div style={{display:"flex",alignItems:"center",gap:6}}>
     <button onClick={()=>onChange(Math.max(0,(value||0)-step))} style={{width:48,height:48,borderRadius:12,background:"#2A2A2E",color:"#fff",fontSize:22,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>{"\u2212"}</button>
-    <div style={{minWidth:76,height:48,borderRadius:12,background:color+"20",border:"2px solid "+color+"60",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:24,color:"#fff",fontVariantNumeric:"tabular-nums"}}>{value||"\u2014"}</div>
+    {editing?
+      <input ref={ref} type="number" inputMode="decimal" defaultValue={value||""} onBlur={e=>commit(e.target.value)} onKeyDown={e=>{if(e.key==="Enter")commit(e.target.value)}}
+        style={{width:76,height:48,borderRadius:12,background:color+"20",border:"2px solid "+color,textAlign:"center",fontWeight:900,fontSize:22,color:"#fff",outline:"none",fontFamily:"inherit",boxSizing:"border-box",MozAppearance:"textfield",WebkitAppearance:"none"}}/>
+    : <div onClick={()=>setEditing(true)} style={{minWidth:76,height:48,borderRadius:12,background:color+"20",border:"2px solid "+color+"60",display:"flex",alignItems:"center",justifyContent:"center",fontWeight:900,fontSize:24,color:"#fff",fontVariantNumeric:"tabular-nums",cursor:"pointer"}}>{value||"\u2014"}</div>
+    }
     <button onClick={()=>onChange((value||0)+step)} style={{width:48,height:48,borderRadius:12,background:color,color:"#fff",fontSize:22,fontWeight:700,display:"flex",alignItems:"center",justifyContent:"center"}}>+</button></div></div>)}
 
 function Loader({color,text}){return(<div style={{display:"flex",flexDirection:"column",alignItems:"center",justifyContent:"center",padding:60,gap:16}}>
